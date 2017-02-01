@@ -5,6 +5,7 @@
 
 struct node {
   char value[MAXWRD];
+  int quant;
   struct node *left;
   struct node *right;
   struct node *parent;
@@ -34,19 +35,20 @@ int search(struct node* root, char* value, struct node** res){
   }
   else if (gt(root->value, value) == 0){
     *res = root;
-    return 1;
+    return root->quant;
   }
 }
 
-void insert(struct node* root, char* value){
+void insert(struct node* root, char* value, int quant){
   struct node* par = (struct node*) calloc(1, sizeof(struct node));
-  struct node* val = (struct node*) calloc(1, sizeof(struct node));
-  strncpy(val->value, value, MAXWRD);
   if (!search(root, value, &par)){
+    struct node* val = (struct node*) calloc(1, sizeof(struct node));
+    strncpy(val->value, value, MAXWRD);
+    val->quant = quant;
     if (gt(par->value, val->value) == 1) par->left = val;
     else par->right = val;
     val->parent = par;
-  }
+  } else par->quant += quant;
 }
 
 void mapinorder(struct node* root, void (*func)(struct node*)){
@@ -55,8 +57,31 @@ void mapinorder(struct node* root, void (*func)(struct node*)){
   if (root->right) mapinorder(root->right, func);
 }
 
+void mappreorder(struct node* root, void (*func)(struct node*)){
+  func(root);
+  if (root->left) mapinorder(root->left, func);
+  if (root->right) mapinorder(root->right, func);
+}
+
+void mergetrees(struct node* frst, struct node* scnd){ // resulting tree will be stored in frst
+  inline void insertinother(struct node* a){
+    insert(frst, a->value, a->quant);
+  }
+  mapinorder(scnd, &insertinother);
+}
+
+int sizeoftree(struct node* root){
+  int counter = 0;
+  inline void countnode(struct node* a){
+    counter++;
+  }
+  mapinorder(root, &countnode);
+  return counter;
+}
+  
+
 void printnode(struct node* nd){
-  printf("%s ", nd->value);
+  printf("%s \t %d \n", nd->value, nd->quant);
 }
 
 void printtree(struct node* root){

@@ -1,0 +1,8 @@
+7 
+this 	 1 
+an 	 1 
+email 	 2 
+example 	 2 
+is 	 1 
+newline 	 1 
+try 	 1 

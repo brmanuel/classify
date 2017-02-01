@@ -42,8 +42,10 @@ char** parsetxt(char* filename, int *wordcount){
     if (feof(file)) break;
     while(! isspace(a) && j < maxwrdlength){
       if (feof(file)) goto done;
-      wrd[j] = a;
-      j++;
+      if (! ispunct(a)) {
+	wrd[j] = a;
+	j++;
+      }
       a = fgetc(file);
     }
     if (wrd != "") strncpy(words[i], wrd, j);
