@@ -78,6 +78,15 @@ int sizeoftree(struct node* root){
   mapinorder(root, &countnode);
   return counter;
 }
+
+int totalwords(struct node* root){
+  int counter = 0;
+  inline void countwords(struct node* a){
+    counter += a->quant;
+  }
+  mapinorder(root, &countwords);
+  return counter;
+}
   
 
 void printnode(struct node* nd){

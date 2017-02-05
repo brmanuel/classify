@@ -73,16 +73,53 @@ void writetree2file(char* filename, struct node* root){
   fclose(fp);
 }
 
-void classify(char* emailname, char* spamdata, char* honestdata, char* probforspam){
+// Computes the probability ratio p(S|D)/p(~S|D). if result > 1 it is likely that the email is Spam
+// parameters:
+// in: emailname is the name of the .txt file holding the email to classify
+// in: spamdata is the name of the .txt file holding prior observations of words that appear in spam plus their quantities
+// in: honestdata is the equivalent for honest mails
+// in: probforspam is again a .txt filename in which a single number is saved that reflects the current estimate of p(S). this will change over time.
+// out: the probability ratio
+
+double probability(char* emailname, struct node* spam, struct node* honest, double pspam){ 
   double PS, PnS, PDgS, PDgnS; // P[Spam], P[~Spam], P[Email|Spam], P[Email|~Spam]
-  if (!probforspam) PS = 0.5;
-  FILE* pforspam = fopen(probforspam, "r");
-  if (!pforspam) PS = 0.5;
-  else if (fscanf(pforspam, "%d", &PS) < 0) PS = 0.5;
+  PS = pspam;
   PnS = 1.-PS;
+
+  struct node* mail = mktreefromFile(emailname);
+  int totalwrds = totalwords(spam);
+  PDgS = 1.;
+  inline void compprob(struct node* a){
+    struct node** dummy;
+    int q = search(spam, a->value, dummy);
+    if (q > 0) PDgnS *= ((double) q) / ((double) totalwrds);
+  }
+  mapinorder(mail, &compprob);
+  PDgS = PDgnS;
   
+  totalwrds = totalwords(honest);
+  PDgnS = 1.;
+  mapinorder(honest, &compprob);
+
+  return (PS/PnS) * (PDgS/PDgnS);
+}
+
+void classify(char* emailname){
+  char* spam = "spmdt.txt";
+  char* honest = "hnstdt.txt";
+  char* pforspam = "pfors.txt";
+  struct node* sp = mktreefromFile(spam);
+  struct node* hn = mktreefromFile(honest);
+  FILE* fp = fopen(pforspam, "r
   
 }
+
+void training(char* emailname, int spam){
+  char* spam = "spmdt.txt";
+  char* honest = "hnstdt.txt";
+  char* pforspam = "pfors.txt";
+  
+} 
 
 int main(){
   int txtlength;
