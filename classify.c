@@ -60,13 +60,19 @@ struct node* mktreefromFile(char* filename){
   
   fscanf(fp, "%d \n", &length);
   err = fscanf(fp, "%s \t %d \n", wrd, &quant);
-  if (length < 1 || err < 2){
+  if (err < 2){
+    strncpy(wrd, "_DUMMY_", 7);
+    quant = 0;
+  }
+  if (length < 1){
     printf("file %s seems to be empty", filename);
     return (struct node*) NULL;
   }
   struct node* root = mknode(wrd, quant);
   for (int i = 0; i < length; i++){
     err = fscanf(fp, "%s \t %d \n", wrd, &quant);
+    if (err == 1) quant = 1;
+    else if (err == 0) continue;
     insert(root, wrd, quant);
   }
   fclose(fp);
@@ -152,9 +158,13 @@ int classify(char* emailname){
   double ps;
   int totalmails, spammails;
   FILE* fp = fopen(pforspamdata, "r");
-  if (!fp) ps = 0.5;
-  else if (fscanf(fp, "%d %d", &totalmails, &spammails) < 2) ps = 0.5;
+  if (!fp || fscanf(fp, "%d %d", &totalmails, &spammails) < 2){
+    ps = 0.5;
+    totalmails = 0;
+    spammails = 0;
+  }
   else ps = ((double) spammails)/((double)totalmails);
+  fclose(fp);
 
   double decision = probability(mail, sp, hn, ps);
 
@@ -165,39 +175,43 @@ int classify(char* emailname){
 }
 
 void training(char* emailname, int spam){
-  FILE* pforspam = fopen(pforspamdata, "w+");
+  FILE* pforspam = fopen(pforspamdata, "r");
   int totalmail, spammail;
-  if (!fscanf(pforspam, "%d %d", &totalmail, &spammail)){
+  if (!pforspam || fscanf(pforspam, "%d %d", &totalmail, &spammail) < 2){
     totalmail = 0;
     spammail = 0;
   }
+  fclose(pforspam);
   struct node* mail = mktreefromMail(emailname);
-  if (spam) {
+  if (spam == 1) {
     struct node* sp = mktreefromFile(spamdata);
     if (sp) {
       mergetrees(mail, sp);
     }
     writetree2file(spamdata, mail);
-    spammail += 1.;
-  } else {
+    spammail += 1;
+  } else if (spam == 0) {
     struct node* hn = mktreefromFile(honestdata);
     if (hn) {
       mergetrees(mail, hn);
     }
     writetree2file(honestdata, mail);
   }
+  else return;
   totalmail += 1;
+  pforspam = fopen(pforspamdata, "w");
   fprintf(pforspam, "%d %d", totalmail, spammail);  
+  fclose(pforspam);
 } 
 
-int main(){
-  /*int txtlength;
-  char** words = parsetxt("exp.txt", &txtlength);
-  struct node* tree = mktree(words, txtlength);
-  writetree2file("exp2.txt", tree);
-  struct node* tree2 = mktreefromFile("exp2.txt");
-  mergetrees(tree, tree2);
-  printtree(tree);*/
-  training("honest1.txt", 0);
+int main(int argc, char* argv[]){
+  if (argc == 3){
+    char* end;
+    training(argv[1], (int) strtol(argv[2], &end, 10));
+  }
+  else if (argc == 2){
+    classify(argv[1]);
+  }
+  else return 1;
   return 0;
 }
