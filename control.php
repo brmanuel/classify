@@ -9,7 +9,7 @@ $address = fgets(STDIN);
 echo("password: ");
 $password = fgets(STDIN);
 
-// connection to hotmail server. will not work for other email clients (change server name -> imap-mail.outlook.com and port -> 993
+// connection to hotmail server. Will not work for other email clients (change server name -> imap-mail.outlook.com and port -> 993
 $imap = imap_open("{imap-mail.outlook.com:993/ssl/novalidate-cert}", $address, $password);
 
 if( $imap ) {
